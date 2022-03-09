@@ -109,6 +109,13 @@ class Player(Entity):
         elif (entity.left < entity.min_left):
             entity.xspeed *= -1
             entity.left = entity.min_left                
+        else:
+            for obstacle in obstacles:
+                if entity.colliderect(obstacle):
+                    if (obstacle.solid):
+                        entity.x -= entity.xspeed                        
+                        entity.xspeed = 0
+
         
         entity.y += entity.yspeed
 
