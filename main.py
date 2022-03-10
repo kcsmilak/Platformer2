@@ -3,10 +3,28 @@ import pygame
 import random
 import helpers
 
+
+
+import io
+try:
+    # Python2
+    from urllib2 import urlopen
+except ImportError:
+    # Python3
+    from urllib.request import urlopen
+
+MAP_URL="https://docs.google.com/spreadsheets/d/1jbsapypHN5FX6k8K7Zs271bY8QSzSMiLkHFi2667nsU/gviz/tq?tqx=out:csv&sheet=live"
+
+
+
 TITLE = "Hello World"
 
-WIDTH = 600
-HEIGHT = 450
+#WIDTH = 600
+#HEIGHT = 450
+
+WIDTH = 1024
+HEIGHT = 768
+
 
 MAX_PLATFORMS = 3
 MAX_BALLS = 0
@@ -24,7 +42,7 @@ BALL_ENTITY = 8
 BULLET_ENTITY = 9
 
 SHOOT_COOLDOWN = 20
-TILE_SIZE = 50
+TILE_SIZE = 48
 
 MAP1 = [[1,1,1,1,1,1,1,1,1,1,1,1],
         [1,0,0,0,0,0,0,0,0,0,0,1],
@@ -168,6 +186,33 @@ class Player(Entity):
 class Platform(Entity):
     def __init__(self, i):
         Entity.__init__(self, "platform-rock")
+
+
+        oh = 5
+        ow = 96
+        cropped = pygame.Surface((ow, oh), pygame.SRCALPHA, 32)
+        img = pygame.image.load("images/tiles.png")
+  
+        cropped.blit(img, (0, 0), (16*17, 0, 16, oh))
+        cropped.blit(img, (16, 0), (16*18, 0, 16, oh))
+        cropped.blit(img, (32, 0), (16*18, 0, 16, oh))
+        cropped.blit(img, (48, 0), (16*18, 0, 16, oh))
+        cropped.blit(img, (64, 0), (16*18, 0, 16, oh))
+        cropped.blit(img, (80, 0), (16*19, 0, 16, oh))
+
+        self._surf = cropped
+        
+        #self._surf = pygame.transform.scale(self._surf,( 2*ow*(TILE_SIZE/48), 2* oh * (TILE_SIZE/48)))
+        self._update_pos()
+
+
+
+
+
+
+
+
+        
         self.type = PLATFORM_ENTITY
         self.pos = 100 * i + 100, i * 135 + 50
         self.xspeed = random.randint(1, 3)        
@@ -196,6 +241,8 @@ class Bullet(Entity):
         self.yspeed = dy 
         self.solid = True
         self.max_right = self.max_left = 100
+
+
 
 class Tile(Entity):
     def __init__(self, x, y, type):
@@ -255,6 +302,22 @@ class World():
         self.all_entities.clear()
 
         map = MAP1
+
+
+        str = io.BytesIO(urlopen(MAP_URL).read()).read().decode('UTF-8')
+        
+        mapData = []
+        for row in str.split("\n"):
+            newrow = []
+            for cell in row.split(","):
+                newrow.append(int(cell.strip("\"")))
+            mapData.append(newrow)
+        
+        
+        print(mapData)
+
+        map = mapData
+        
         px, py = 0, 0
         
         for y in range(len(map)):
@@ -361,7 +424,7 @@ def update():
 def draw():
     global world
     screen.clear()
-    screen.draw.rect(Rect(((0,0), (WIDTH, HEIGHT))), (55,55,55)) 
+    screen.fill((100,100,100)) 
 
     world.draw(screen)
 
