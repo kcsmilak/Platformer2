@@ -6,7 +6,7 @@ import helpers
 TITLE = "Hello World"
 
 WIDTH = 600
-HEIGHT = 350
+HEIGHT = 450
 
 MAX_PLATFORMS = 3
 MAX_BALLS = 0
@@ -16,12 +16,30 @@ GRAVITY_MAX = 10
 HEIGHT_MIN = -200
 JUMP_BOOST = 10
 
-PLAYER_ENTITY = 0
-PLATFORM_ENTITY = 1
-BALL_ENTITY = 2
-BULLET_ENTITY = 3
+BACKGROUND_ENTITY = 0
+WALL_ENTITY = 1
+PLAYER_ENTITY = 5
+PLATFORM_ENTITY = 7
+BALL_ENTITY = 8
+BULLET_ENTITY = 9
 
 SHOOT_COOLDOWN = 20
+TILE_SIZE = 50
+
+MAP1 = [[1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,1],
+        [1,2,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,2,2,1],
+        [1,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,2,2,0,0,0,0,0,0,1],
+        [1,5,2,3,3,0,2,0,0,0,0,1],
+        [1,2,1,1,1,2,1,2,2,2,2,1]]
+
+
+
+
+
 
 # edge behaviors: STOP, STICK, BOUNCE, DIE, DESTROY
 
@@ -93,6 +111,8 @@ class Player(Entity):
         Entity.__init__(self, "alien-left")
         self.type = PLAYER_ENTITY
         self.min_top = -200        
+        self.x, self.y = 100, 100
+        
 
         
     def move(self, obstacles):
@@ -177,6 +197,53 @@ class Bullet(Entity):
         self.solid = True
         self.max_right = self.max_left = 100
 
+class Tile(Entity):
+    def __init__(self, x, y, type):
+        Entity.__init__(self,"red")        
+        cropped = pygame.Surface((48, 48))
+        img = pygame.image.load("images/tiles.png")
+        if (1 == type):
+            cropped.blit(img, (0, 0), (16*7, 16, 16, 16))
+            cropped.blit(img, (16, 0), (16*7, 16, 16, 16))
+            cropped.blit(img, (32, 0), (16*7, 16, 16, 16))
+            cropped.blit(img, (0, 16), (16*7, 16, 16, 16))
+            cropped.blit(img, (16, 16), (16*7, 16, 16, 16))
+            cropped.blit(img, (32, 16), (16*7, 16, 16, 16))
+            cropped.blit(img, (0, 32), (16*7, 16, 16, 16))
+            cropped.blit(img, (16, 32), (16*7, 16, 16, 16))
+            cropped.blit(img, (32, 32), (16*7, 16, 16, 16))
+            self._surf = cropped
+        elif (2 == type):
+            cropped.blit(img, (0, 0), (16*7, 0, 16, 16))
+            cropped.blit(img, (16, 0), (16*7, 0, 16, 16))
+            cropped.blit(img, (32, 0), (16*7, 0, 16, 16))
+            cropped.blit(img, (0, 16), (16*7, 16, 16, 16))
+            cropped.blit(img, (16, 16), (16*7, 16, 16, 16))
+            cropped.blit(img, (32, 16), (16*7, 16, 16, 16))
+            cropped.blit(img, (0, 32), (16*7, 16, 16, 16))
+            cropped.blit(img, (16, 32), (16*7, 16, 16, 16))
+            cropped.blit(img, (32, 32), (16*7, 16, 16, 16))            
+            self._surf = cropped
+        elif (3 == type):
+            cropped.blit(img, (0, 0), (16*7, 16, 16, 16))
+            cropped.blit(img, (16, 0), (16*7, 16, 16, 16))
+            cropped.blit(img, (32, 0), (16*7, 16, 16, 16))
+            cropped.blit(img, (0, 16), (16*7, 16, 16, 16))
+            cropped.blit(img, (16, 16), (16*7, 16, 16, 16))
+            cropped.blit(img, (32, 16), (16*7, 16, 16, 16))
+            cropped.blit(img, (0, 32), (16*7, 16, 16, 16))
+            cropped.blit(img, (16, 32), (16*7, 16, 16, 16))
+            cropped.blit(img, (32, 32), (16*7, 16, 16, 16))
+            self._surf = cropped
+            
+        self.type = type
+        
+        
+        self._surf = pygame.transform.scale(self._surf, (TILE_SIZE, TILE_SIZE))
+        self._update_pos()
+            
+        self.left = x * TILE_SIZE
+        self.top = y * TILE_SIZE         
 
 class World():
     def __init__(self):
@@ -187,7 +254,24 @@ class World():
     def reset(self):
         self.all_entities.clear()
 
+        map = MAP1
+        px, py = 0, 0
+        
+        for y in range(len(map)):
+            for x in range(len(map[y])):
+                tileType = map[y][x]
+                if (5 > tileType and tileType != 0):
+                    tile = Tile(x, y, tileType)
+                    self.all_entities.append(tile)
+                if (PLAYER_ENTITY == tileType):
+                    px = x * TILE_SIZE
+                    py = y * TILE_SIZE
+
+        #self.all_entities.append(Bullet(100,100,2,0))
+
         self.player = Player()
+        self.player.left = px
+        self.player.bottom = py + TILE_SIZE
         #self.all_entities.append(self.player)
     
         for i in range(0, MAX_PLATFORMS):
@@ -196,7 +280,7 @@ class World():
         for i in range(0, MAX_BALLS):
             self.all_entities.append(Ball()) 
 
-        #self.all_entities.append(Bullet(100,100,2,0))
+
     
     def update(self):
         player = self.player
@@ -278,7 +362,7 @@ def draw():
     global world
     screen.clear()
     screen.draw.rect(Rect(((0,0), (WIDTH, HEIGHT))), (55,55,55)) 
-    
+
     world.draw(screen)
 
 world = World()
