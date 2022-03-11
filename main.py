@@ -184,7 +184,7 @@ class Player(Entity):
 
 class Platform(Entity):
     def __init__(self, i):
-        Entity.__init__(self, "platform-rock")
+        Entity.__init__(self, "red")
 
 
         oh = 5
@@ -221,7 +221,7 @@ class Platform(Entity):
 
 class Ball(Entity):
     def __init__(self):
-        Entity.__init__(self, "bomb")
+        Entity.__init__(self, "red")
         self.type = BALL_ENTITY
         self.pos = random.randint(0,WIDTH - self.width), random.randint(0,HEIGHT - self.height)
         self.xspeed = random.randint(1, 3) 
@@ -232,7 +232,7 @@ class Ball(Entity):
 
 class Bullet(Entity):
     def __init__(self, x, y, dx, dy):
-        Entity.__init__(self, "bullet")
+        Entity.__init__(self, "red")
         self.angle = -90
         self.type = BULLET_ENTITY
         self.pos = x, y
@@ -436,6 +436,8 @@ def draw_grid(screen):
 
 
 def draw():
+    pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+
     global world
     screen.clear()
     screen.fill((100,100,100)) 
@@ -449,6 +451,6 @@ def draw():
 
 world = World()
 #DISPLAYSURF = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-DISPLAYSURF = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+#DISPLAYSURF = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 pgzrun.go()
