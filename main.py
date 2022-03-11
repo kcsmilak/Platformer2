@@ -29,20 +29,20 @@ HEIGHT = 600
 MAX_PLATFORMS = 3
 MAX_BALLS = 0
 
-GRAVITY = 0.3
+GRAVITY = 1
 GRAVITY_MAX = 10
 HEIGHT_MIN = -200
-JUMP_BOOST = 10
+JUMP_BOOST = 15
 
 BACKGROUND_ENTITY = 0
 WALL_ENTITY = 1
-PLAYER_ENTITY = 5
-PLATFORM_ENTITY = 7
-BALL_ENTITY = 8
-BULLET_ENTITY = 9
+PLAYER_ENTITY = -1
+PLATFORM_ENTITY = -7
+BALL_ENTITY = -8
+BULLET_ENTITY = -9
 
 SHOOT_COOLDOWN = 20
-TILE_SIZE = 36
+TILE_SIZE = 16
 
 MAP1 = [[1,1,1,1,1,1,1,1,1,1,1,1],
         [1,0,0,0,0,0,0,0,0,0,0,1],
@@ -247,9 +247,9 @@ class Bullet(Entity):
 class Tile(Entity):
     def __init__(self, x, y, type):
         Entity.__init__(self,"red")        
-        cropped = pygame.Surface((48, 48))
+        cropped = pygame.Surface((16, 16), pygame.SRCALPHA, 32)
         img = pygame.image.load("images/tiles.png")
-        if (1 == type):
+        if (991 == type):
             cropped.blit(img, (0, 0), (16*7, 16, 16, 16))
             cropped.blit(img, (16, 0), (16*7, 16, 16, 16))
             cropped.blit(img, (32, 0), (16*7, 16, 16, 16))
@@ -260,7 +260,7 @@ class Tile(Entity):
             cropped.blit(img, (16, 32), (16*7, 16, 16, 16))
             cropped.blit(img, (32, 32), (16*7, 16, 16, 16))
             self._surf = cropped
-        elif (2 == type):
+        elif (992 == type):
             cropped.blit(img, (0, 0), (16*7, 0, 16, 16))
             cropped.blit(img, (16, 0), (16*7, 0, 16, 16))
             cropped.blit(img, (32, 0), (16*7, 0, 16, 16))
@@ -271,7 +271,7 @@ class Tile(Entity):
             cropped.blit(img, (16, 32), (16*7, 16, 16, 16))
             cropped.blit(img, (32, 32), (16*7, 16, 16, 16))            
             self._surf = cropped
-        elif (3 == type):
+        elif (993 == type):
             cropped.blit(img, (0, 0), (16*7, 16, 16, 16))
             cropped.blit(img, (16, 0), (16*7, 16, 16, 16))
             cropped.blit(img, (32, 0), (16*7, 16, 16, 16))
@@ -282,11 +282,17 @@ class Tile(Entity):
             cropped.blit(img, (16, 32), (16*7, 16, 16, 16))
             cropped.blit(img, (32, 32), (16*7, 16, 16, 16))
             self._surf = cropped
+
+        else:
+            col = type % 100
+            row = type // 100
+            cropped.blit(img, (0, 0), (16*col, 16*row, 16, 16))
+            self._surf = cropped
             
         self.type = type
         
         
-        self._surf = pygame.transform.scale(self._surf, (TILE_SIZE, TILE_SIZE))
+        #self._surf = pygame.transform.scale(self._surf, (TILE_SIZE, TILE_SIZE))
         self._update_pos()
             
         self.left = x * TILE_SIZE
@@ -314,7 +320,7 @@ class World():
             mapData.append(newrow)
         
         
-        print(mapData)
+        #print(mapData)
 
         map = mapData
         
@@ -323,10 +329,11 @@ class World():
         for y in range(len(map)):
             for x in range(len(map[y])):
                 tileType = map[y][x]
-                if (5 > tileType and tileType != 0):
+                if (tileType > 0):
                     tile = Tile(x, y, tileType)
                     self.all_entities.append(tile)
-                if (PLAYER_ENTITY == tileType):
+                elif (PLAYER_ENTITY == tileType):
+                    print(f'loading player at {x},{y}')
                     px = x * TILE_SIZE
                     py = y * TILE_SIZE
 
@@ -383,14 +390,16 @@ class World():
             player.image = "alien-right"
         if (keyboard.a):
             player.image = "alien-left"
-    
+
+        player.xspeed = 0
+        #player.yspeed = 0
         if (keyboard.d):
-            player.xspeed = 5 
+            player.xspeed += 5 
         elif (keyboard.a):
-            player.xspeed = -5 
-        else:
-            player.xspeed = 0
-            pass
+            player.xspeed -= 5 
+        #else:
+            #player.xspeed = 0
+            #pass
 
         if (keyboard.space) and not player.shooting:
             # shoot
@@ -421,6 +430,12 @@ def update():
     global world
     world.update()
 
+def draw_grid(screen):
+    for line in range(0, 20):
+        pygame.draw.line(screen, (255, 255, 255), (0, line * TILE_SIZE), (WIDTH, line * TILE_SIZE))
+        pygame.draw.line(screen, (255, 255, 255), (line * TILE_SIZE, 0), (line * TILE_SIZE, HEIGHT))
+
+
 def draw():
     global world
     screen.clear()
@@ -428,7 +443,15 @@ def draw():
 
     world.draw(screen)
 
+    #draw_grid(screen)
+
+
+    
+
 world = World()
+#DISPLAYSURF = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+DISPLAYSURF = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+
 pgzrun.go()
 
 
