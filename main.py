@@ -1,7 +1,6 @@
 import pgzrun
 import pygame
 import random
-import helpers
 
 
 
@@ -453,76 +452,3 @@ world = World()
 DISPLAYSURF = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 pgzrun.go()
-
-
-
-
-
-
-
-
-
-
-
-def space():
-    pass
-    '''
-    for i in range(0, len(all_entities)):
-        for j in range (i+1, len(all_entities)):
-            entity1 = all_entities[i];
-            entity2 = all_entities[j];
-
-            if entity1.colliderect(entity2):
-                print("collision")
-    '''
-    
-    '''        
-    for i in range(1, len(all_entities)):
-        entity = all_entities[i]
-        if player.colliderect(entity):
-            print("collision")
-            obj1 = player
-            obj2 = entity
-
-            v1 = pygame.math.Vector2(obj1.x, obj1.y)
-            v2 = pygame.math.Vector2(obj2.x, obj2.y)
-
-            nv = v2 - v1
-            m1 = pygame.math.Vector2(obj1.xspeed, obj1.yspeed).reflect(nv)
-            m2 = pygame.math.Vector2(obj2.xspeed, obj2.yspeed).reflect(nv)
-
-            obj1.x -= obj1.xspeed
-            obj1.y -= obj1.yspeed
-            
-            obj1.xspeed, obj1.yspeed = m1.x, m1.y
-    '''
-
-
-    '''
-    def move2(self, obstacles):
-        entity = self
-        entity.x += entity.xspeed
-        
-        if (entity.right > entity.max_right):
-            entity.xspeed *= -1
-            entity.right = entity.max_right
-            
-        if (entity.left < entity.min_left):
-            entity.xspeed *= -1
-            entity.left = entity.min_left
-
-        entity.y += entity.yspeed
-        
-        if (entity.bottom > entity.max_bottom):
-            entity.yspeed *= -1
-            entity.bottom = entity.max_bottom
-
-            if (PLAYER_ENTITY == entity.type):
-                entity.yspeed = 0
-                entity.airborn = False
-                
-            
-        if (entity.top < entity.min_top):
-            entity.yspeed *= -1
-            entity.top = entity.min_top    
-    '''
