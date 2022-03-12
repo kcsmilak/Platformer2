@@ -60,6 +60,16 @@ MAP1 = [[1,1,1,1,1,1,1,1,1,1,1,1],
 
 # edge behaviors: STOP, STICK, BOUNCE, DIE, DESTROY
 
+
+DIRECTION_RIGHT = 1
+DIRECTION_LEFT = 2
+
+MOVEMENT_RIGHT = 1
+MOVEMENT_LEFT = 2
+
+MOVEMENT_JUMPING = 3
+MOVEMENT_IDLE = 0
+
 class Entity(Actor):
     def __init__(self, image):
         Actor.__init__(self, image)
@@ -77,6 +87,8 @@ class Entity(Actor):
         self.shooting = False
         self.edgeBounce = True
         self.shootCooldown = 0
+        self.movement = MOVEMENT_IDLE
+        self.direction = DIRECTION_RIGHT
 
 
         
@@ -125,10 +137,42 @@ class Entity(Actor):
         
 class Player(Entity):
     def __init__(self):
-        Entity.__init__(self, "alien-left")
+        Entity.__init__(self, "red")
         self.type = PLAYER_ENTITY
         self.min_top = -200        
         self.x, self.y = 100, 100
+        self.frame = 0
+        self.run = pygame.image.load("images/run.png")
+        self.idle = pygame.image.load("images/idle.png")
+        self.jump = pygame.image.load("images/jump.png")
+        
+    def updateImage(self):
+        cropped = pygame.Surface((32, 32), pygame.SRCALPHA, 32)
+
+        img = 0
+        frame = 0
+        if (MOVEMENT_IDLE == self.movement):
+            img = self.idle
+            frame = (self.frame // 1) % 11 
+        elif (MOVEMENT_JUMPING == self.movement):
+            img = self.jump
+            frame = 0
+        else:
+            img = self.run
+            frame = (self.frame // 1) % 12
+
+
+        
+        cropped.blit(img, (0, 0), (32 * (frame), 0, 32, 32))
+
+        if (DIRECTION_LEFT == self.direction):
+            cropped = pygame.transform.flip(cropped, True, False)
+        
+        self.frame += 1
+        self._surf = cropped
+        
+        #self._surf = pygame.transform.scale(self._surf,( 48, 48))
+        self._update_pos()        
         
 
         
@@ -180,6 +224,10 @@ class Player(Entity):
                         break
             if entity.yspeed > 0:
                 entity.airborn = True
+
+        self.updateImage()
+
+        
 
 
 class Platform(Entity):
@@ -248,45 +296,10 @@ class Tile(Entity):
         Entity.__init__(self,"red")        
         cropped = pygame.Surface((16, 16), pygame.SRCALPHA, 32)
         img = pygame.image.load("images/tiles.png")
-        if (991 == type):
-            cropped.blit(img, (0, 0), (16*7, 16, 16, 16))
-            cropped.blit(img, (16, 0), (16*7, 16, 16, 16))
-            cropped.blit(img, (32, 0), (16*7, 16, 16, 16))
-            cropped.blit(img, (0, 16), (16*7, 16, 16, 16))
-            cropped.blit(img, (16, 16), (16*7, 16, 16, 16))
-            cropped.blit(img, (32, 16), (16*7, 16, 16, 16))
-            cropped.blit(img, (0, 32), (16*7, 16, 16, 16))
-            cropped.blit(img, (16, 32), (16*7, 16, 16, 16))
-            cropped.blit(img, (32, 32), (16*7, 16, 16, 16))
-            self._surf = cropped
-        elif (992 == type):
-            cropped.blit(img, (0, 0), (16*7, 0, 16, 16))
-            cropped.blit(img, (16, 0), (16*7, 0, 16, 16))
-            cropped.blit(img, (32, 0), (16*7, 0, 16, 16))
-            cropped.blit(img, (0, 16), (16*7, 16, 16, 16))
-            cropped.blit(img, (16, 16), (16*7, 16, 16, 16))
-            cropped.blit(img, (32, 16), (16*7, 16, 16, 16))
-            cropped.blit(img, (0, 32), (16*7, 16, 16, 16))
-            cropped.blit(img, (16, 32), (16*7, 16, 16, 16))
-            cropped.blit(img, (32, 32), (16*7, 16, 16, 16))            
-            self._surf = cropped
-        elif (993 == type):
-            cropped.blit(img, (0, 0), (16*7, 16, 16, 16))
-            cropped.blit(img, (16, 0), (16*7, 16, 16, 16))
-            cropped.blit(img, (32, 0), (16*7, 16, 16, 16))
-            cropped.blit(img, (0, 16), (16*7, 16, 16, 16))
-            cropped.blit(img, (16, 16), (16*7, 16, 16, 16))
-            cropped.blit(img, (32, 16), (16*7, 16, 16, 16))
-            cropped.blit(img, (0, 32), (16*7, 16, 16, 16))
-            cropped.blit(img, (16, 32), (16*7, 16, 16, 16))
-            cropped.blit(img, (32, 32), (16*7, 16, 16, 16))
-            self._surf = cropped
-
-        else:
-            col = type % 100
-            row = type // 100
-            cropped.blit(img, (0, 0), (16*col, 16*row, 16, 16))
-            self._surf = cropped
+        col = type % 100
+        row = type // 100
+        cropped.blit(img, (0, 0), (16*col, 16*row, 16, 16))
+        self._surf = cropped
             
         self.type = type
         
@@ -386,16 +399,29 @@ class World():
             self.all_entities.append(Ball())    
         
         if (keyboard.d):
-            player.image = "alien-right"
-        if (keyboard.a):
-            player.image = "alien-left"
+            #player.image = "alien-right"
+            player.direction = DIRECTION_RIGHT
+            player.movement = MOVEMENT_RIGHT
+        elif (keyboard.a):
+            #player.image = "alien-left"
+            player.direction = DIRECTION_LEFT
+            player.movement = MOVEMENT_RIGHT            
+        else:
+            player.movement = MOVEMENT_IDLE
 
+        if (player.airborn):
+            player.movement = MOVEMENT_JUMPING
+            
         player.xspeed = 0
+        dx = 5
+        if (keyboard.LSHIFT):
+            dx = 2
         #player.yspeed = 0
         if (keyboard.d):
-            player.xspeed += 5 
+
+            player.xspeed += dx 
         elif (keyboard.a):
-            player.xspeed -= 5 
+            player.xspeed -= dx 
         #else:
             #player.xspeed = 0
             #pass
@@ -413,6 +439,7 @@ class World():
         if keyboard.w and not player.airborn:
             player.yspeed -= JUMP_BOOST
             player.airborn = True
+            player.movement = MOVEMENT_JUMPING
     
         player.yspeed += GRAVITY
 
