@@ -3,6 +3,7 @@ import pygame
 import random
 
 
+# START HELPER
 
 import io
 try:
@@ -11,12 +12,35 @@ try:
 except ImportError:
     # Python3
     from urllib.request import urlopen
+    
+def loadDocsCSV(url):
+    map = []
+    str = io.BytesIO(urlopen(url).read()).read().decode('UTF-8')        
+    for row in str.split("\n"):
+        newrow = []
+        for cell in row.split(","):
+            newrow.append(int(cell.strip("\"")))
+        map.append(newrow)
+    return map
 
-MAP_URL="https://docs.google.com/spreadsheets/d/1jbsapypHN5FX6k8K7Zs271bY8QSzSMiLkHFi2667nsU/gviz/tq?tqx=out:csv&sheet=live"
+# END HELPER
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 TITLE = "Hello World"
+MAP_URL="https://docs.google.com/spreadsheets/d/1jbsapypHN5FX6k8K7Zs271bY8QSzSMiLkHFi2667nsU/gviz/tq?tqx=out:csv&sheet=live"
 
 #WIDTH = 600
 #HEIGHT = 450
@@ -40,32 +64,18 @@ PLATFORM_ENTITY = -7
 BALL_ENTITY = -8
 BULLET_ENTITY = -9
 
-SHOOT_COOLDOWN = 20
+SHOOT_COOLDOWN = 10
 TILE_SIZE = 16
-
-MAP1 = [[1,1,1,1,1,1,1,1,1,1,1,1],
-        [1,0,0,0,0,0,0,0,0,0,0,1],
-        [1,0,0,0,0,0,0,0,0,0,0,1],
-        [1,2,0,0,0,0,0,0,0,0,0,1],
-        [1,0,0,0,0,0,0,0,0,2,2,1],
-        [1,0,0,0,0,0,0,0,0,0,0,1],
-        [1,0,0,2,2,0,0,0,0,0,0,1],
-        [1,5,2,3,3,0,2,0,0,0,0,1],
-        [1,2,1,1,1,2,1,2,2,2,2,1]]
-
-
-
-
 
 
 # edge behaviors: STOP, STICK, BOUNCE, DIE, DESTROY
 
 
 DIRECTION_RIGHT = 1
-DIRECTION_LEFT = 2
+DIRECTION_LEFT = -1
 
 MOVEMENT_RIGHT = 1
-MOVEMENT_LEFT = 2
+MOVEMENT_LEFT = -1
 
 MOVEMENT_JUMPING = 3
 MOVEMENT_IDLE = 0
@@ -251,15 +261,7 @@ class Platform(Entity):
         
         #self._surf = pygame.transform.scale(self._surf,( 2*ow*(TILE_SIZE/48), 2* oh * (TILE_SIZE/48)))
         self._update_pos()
-
-
-
-
-
-
-
-
-        
+       
         self.type = PLATFORM_ENTITY
         self.pos = 100 * i + 100, i * 135 + 50
         self.xspeed = random.randint(1, 3)        
@@ -287,7 +289,16 @@ class Bullet(Entity):
         self.xspeed = dx 
         self.yspeed = dy 
         self.solid = True
-        self.max_right = self.max_left = 100
+        #self.max_right = self.max_left = 100
+        self._surf = pygame.transform.scale(self._surf, (5,5))
+        self._update_pos()      
+        self.lifetime = 60
+
+    def move(self, player):
+        self.lifetime -= 1
+        if (self.lifetime <=0):
+            self.hit = True
+        Entity.move(self,player)
 
 
 
@@ -310,25 +321,20 @@ class Tile(Entity):
         self.left = x * TILE_SIZE
         self.top = y * TILE_SIZE         
 
+
 class World():
     def __init__(self):
         self.all_entities = []
         self.player = 0
         self.reset()
 
+
+
     def reset(self):
         self.all_entities.clear()
 
-        map = []
-        str = io.BytesIO(urlopen(MAP_URL).read()).read().decode('UTF-8')        
-        for row in str.split("\n"):
-            newrow = []
-            for cell in row.split(","):
-                newrow.append(int(cell.strip("\"")))
-            map.append(newrow)
-        
-        px, py = 0, 0
-        
+        map = loadDocsCSV(MAP_URL)
+               
         for y in range(len(map)):
             for x in range(len(map[y])):
                 tileType = map[y][x]
@@ -340,11 +346,11 @@ class World():
                     self.player.left = x * TILE_SIZE
                     self.player.bottom = y * TILE_SIZE
     
-        for i in range(0, MAX_PLATFORMS):
-            self.all_entities.append(Platform(i))    
+        #for i in range(0, MAX_PLATFORMS):
+        #    self.all_entities.append(Platform(i))    
 
-        for i in range(0, MAX_BALLS):
-            self.all_entities.append(Ball()) 
+        #for i in range(0, MAX_BALLS):
+        #    self.all_entities.append(Ball()) 
 
 
     
@@ -383,11 +389,9 @@ class World():
             self.all_entities.append(Ball())    
         
         if (keyboard.d):
-            #player.image = "alien-right"
             player.direction = DIRECTION_RIGHT
             player.movement = MOVEMENT_RIGHT
         elif (keyboard.a):
-            #player.image = "alien-left"
             player.direction = DIRECTION_LEFT
             player.movement = MOVEMENT_RIGHT            
         else:
@@ -397,9 +401,13 @@ class World():
             player.movement = MOVEMENT_JUMPING
             
         player.xspeed = 0
-        dx = 5
+        dx = 0
         if (keyboard.LSHIFT):
+            dx = 7
+        elif (keyboard.S):
             dx = 2
+        else:
+            dx = 5
         #player.yspeed = 0
         if (keyboard.d):
 
@@ -414,7 +422,8 @@ class World():
             # shoot
             player.shooting = True
             player.shootCooldown = SHOOT_COOLDOWN
-            self.all_entities.append(Bullet(player.x,player.y,2,0))
+            bullet = Bullet(player.x+(player.width//2*player.direction),player.y + player.height//2,4*player.direction,0)
+            self.all_entities.append(bullet)
         elif player.shootCooldown > 0: # add cooldown here
             player.shootCooldown -= 1
         else:
@@ -439,12 +448,6 @@ def update():
     global world
     world.update()
 
-def draw_grid(screen):
-    for line in range(0, 20):
-        pygame.draw.line(screen, (255, 255, 255), (0, line * TILE_SIZE), (WIDTH, line * TILE_SIZE))
-        pygame.draw.line(screen, (255, 255, 255), (line * TILE_SIZE, 0), (line * TILE_SIZE, HEIGHT))
-
-
 def draw():
     pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
@@ -452,12 +455,7 @@ def draw():
     screen.clear()
     screen.fill((100,100,100)) 
 
-    world.draw(screen)
-
-    #draw_grid(screen)
-
-
-    
+    world.draw(screen)   
 
 world = World()
 #DISPLAYSURF = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
