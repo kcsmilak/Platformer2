@@ -31,7 +31,7 @@ MAX_BALLS = 0
 GRAVITY = 1
 GRAVITY_MAX = 10
 HEIGHT_MIN = -200
-JUMP_BOOST = 15
+JUMP_BOOST = 11
 
 BACKGROUND_ENTITY = 0
 WALL_ENTITY = 1
@@ -319,22 +319,13 @@ class World():
     def reset(self):
         self.all_entities.clear()
 
-        map = MAP1
-
-
-        str = io.BytesIO(urlopen(MAP_URL).read()).read().decode('UTF-8')
-        
-        mapData = []
+        map = []
+        str = io.BytesIO(urlopen(MAP_URL).read()).read().decode('UTF-8')        
         for row in str.split("\n"):
             newrow = []
             for cell in row.split(","):
                 newrow.append(int(cell.strip("\"")))
-            mapData.append(newrow)
-        
-        
-        #print(mapData)
-
-        map = mapData
+            map.append(newrow)
         
         px, py = 0, 0
         
@@ -345,16 +336,9 @@ class World():
                     tile = Tile(x, y, tileType)
                     self.all_entities.append(tile)
                 elif (PLAYER_ENTITY == tileType):
-                    print(f'loading player at {x},{y}')
-                    px = x * TILE_SIZE
-                    py = y * TILE_SIZE
-
-        #self.all_entities.append(Bullet(100,100,2,0))
-
-        self.player = Player()
-        self.player.left = px
-        self.player.bottom = py + TILE_SIZE
-        #self.all_entities.append(self.player)
+                    self.player = Player()
+                    self.player.left = x * TILE_SIZE
+                    self.player.bottom = y * TILE_SIZE
     
         for i in range(0, MAX_PLATFORMS):
             self.all_entities.append(Platform(i))    
@@ -444,12 +428,11 @@ class World():
         player.yspeed += GRAVITY
 
     def draw(self,screen):
-
-        self.player.draw()
         
         for entity in self.all_entities:
             entity.draw()
-       
+
+        self.player.draw()
 
 
 def update():
